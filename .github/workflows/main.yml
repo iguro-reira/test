@@ -1,0 +1,25 @@
+name: test
+
+on:
+  push:
+
+jobs:
+  build:
+    name:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: env check
+      env:
+        REPOSITORY: '${{ vars.ENV }}-repository'
+      run: |
+        echo ${{ github.ref_name }}
+        echo ${{ vars.ENV }}
+        echo ${{ env.REPOSITORY }}
