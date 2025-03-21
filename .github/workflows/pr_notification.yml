@@ -1,0 +1,60 @@
+name: PR notification 
+
+on:
+  pull_request:
+    types:
+      - assigned
+      - edited
+  pull_request_review:
+    types:
+      - approved
+
+jobs:
+  notification:
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Checkout repository
+      #   uses: actions/checkout@v3
+
+      - name: Get PR data
+        id: get_author_slack
+        run: |
+          # AUTHOR_SLACK=$(jq -r ".[] | select(.GITHUB_USERNAME == \"${{ github.event.pull_request.user.login }}\") | .SLACK_USERNAME" .github/workflows/member.json)
+          AUTHOR_SLACK=${{ github.event.pull_request.user.login }}
+          echo "author_slack=$AUTHOR_SLACK" >> $GITHUB_OUTPUT
+
+      - name: Envs
+        if: github.event_name == 'pull_request'
+        run: |
+          AUTHOR_SLACK=${{ steps.get_author_slack.outputs.author_slack }}
+          echo "Author: $AUTHOR_SLACK , Title: ${{ github.event.pull_request.title }}, URL: ${{ github.event.pull_request.html_url }}"
+
+      - name: send
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
+          payload: |
+            TO_USER_ID: "U07Q63KPN3T"
+            FROM_USER_ID: "U07Q63KPN3T"
+            MESSAGE: "You got a review request. "
+            URL: "${{ github.event.pull_request.html_url }}"
+            TITLE: "${{ github.event.pull_request.title }}"
+
+      # - name: Notify Reviewer of Assignment #レビュー依頼通知
+      #   if: github.event_name == 'pull_request' # && github.event.action == 'assigned'
+      #   run: |
+      #     AUTHOR_SLACK=${{ steps.get_author_slack.outputs.author_slack }}
+      #     for assignee in ${{ github.event.pull_request.assignees }}; do
+      #       ASSIGNEE_SLACK=${{ assignee.login }}
+      #       echo "Author: $AUTHOR_SLACK , Reviewer: $ASSIGNEE_SLACK, Title: ${{ github.event.pull_request.title }}, URL: ${{ github.event.pull_request.html_url }}"
+      #     done
+
+      # - name: Notify Author of Approval #承認通知
+      #   if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
+      #   run: |
+      #     # APPROVER_SLACK=$(jq -r ".[] | select(.GITHUB_USERNAME == \"${{ github.event.review.user.login }}\") | .SLACK_USERNAME" .github/workflows/member.json)
+      #     APPROVER_SLACK=${{ github.event.review.user.login }}
+      #     AUTHOR_SLACK=${{ steps.get_author_slack.outputs.author_slack }}
+      #     echo "Author: $AUTHOR_SLACK , Approver: $APPROVER_SLACK, Title: ${{ github.event.pull_request.title }}, URL: ${{ github.event.pull_request.html_url }}"
+
