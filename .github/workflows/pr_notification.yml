@@ -23,10 +23,23 @@ jobs:
           AUTHOR_SLACK=${{ github.event.pull_request.user.login }}
           echo "author_slack=$AUTHOR_SLACK" >> $GITHUB_OUTPUT
 
-      - name: TEST # TEST
+      - name: Envs
         if: github.event_name == 'pull_request'
         run: |
+          AUTHOR_SLACK=${{ steps.get_author_slack.outputs.author_slack }}
           echo "Author: $AUTHOR_SLACK , Title: ${{ github.event.pull_request.title }}, URL: ${{ github.event.pull_request.html_url }}"
+
+      - name: send
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
+          payload: |
+            TO_USER_ID: "U07Q63KPN3T"
+            FROM_USER_ID: "U07Q63KPN3T"
+            MESSAGE: "You got a review request. "
+            URL: "${{ github.event.pull_request.html_url }}"
+            TITLE: "${{ github.event.pull_request.title }}"
 
       # - name: Notify Reviewer of Assignment #レビュー依頼通知
       #   if: github.event_name == 'pull_request' # && github.event.action == 'assigned'
