@@ -4,13 +4,24 @@ on:
   push:
 
 jobs:
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          echo "matrix={\"job\": [1, 2, 3]}" >> $GITHUB_OUTPUT
+
   matrix-test:
+    needs: set-matrix
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false # これを false に設定することで、continue-on-error が正しく機能する
       matrix:
-        job: [1, 2, 3]
+        job: ${{ fromJSON(needs.set-matrix.outputs.matrix).job }}
 
-    continue-on-error: true
+    continue-on-error: true # 1つの並列ジョブが失敗しても他のジョブはキャンセルされずに続行される
 
     steps:
       - name: Check Job
