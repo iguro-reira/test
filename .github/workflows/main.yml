@@ -1,25 +1,26 @@
-name: test
+name: Test continue-on-error behavior
 
 on:
   push:
 
 jobs:
-  build:
-    name:
+  matrix-test:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    strategy:
+      matrix:
+        job: [1, 2, 3]
 
     steps:
-    - name: checkout
-      uses: actions/checkout@v4
-
-    - name: env check
-      env:
-        REPOSITORY: '${{ vars.ENV }}-repository'
-      run: |
-        echo ${{ github.ref_name }}
-        echo ${{ vars.ENV }}
-        echo ${{ env.REPOSITORY }}
+      - name: Check Job
+        run: echo "Running on Job ${{ matrix.job }}"
+      
+      - name: Fail or Sleep
+        run: |
+          if [ "${{ matrix.job }}" == "2" ]; then
+            echo "Intentionally failing this job..."
+            exit 1
+          else
+            echo "Waiting for 30 seconds to allow the fail job to run..."
+            sleep 30
+            echo "This job will succeed."
+          fi
