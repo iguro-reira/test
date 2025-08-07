@@ -10,6 +10,8 @@ jobs:
       matrix:
         job: [1, 2, 3]
 
+    continue-on-error: true
+
     steps:
       - name: Check Job
         run: echo "Running on Job ${{ matrix.job }}"
